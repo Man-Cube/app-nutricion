@@ -17,6 +17,7 @@
         input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
         textarea { resize: vertical; height: 80px; }
         .readonly { background-color: #e9ecef; font-weight: bold; color: #555; }
+        .resaltado { background-color: #dff9fb; color: #130f40; font-weight: bold; font-size: 1.1em; border: 2px solid #badc58; }
         .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         input[type="checkbox"] { width: auto; transform: scale(1.2); }
         
@@ -62,62 +63,49 @@
     <h3>2. Antropometría de Inicio</h3>
     <div class="row">
         <div class="col"><label>Talla (m)</label><input type="number" id="talla" step="0.01" placeholder="Ej: 1.85"></div>
-        <div class="col"><label>Peso Inicial (kg)</label><input type="number" id="peso" step="0.1" placeholder="Ej: 95"></div>
-        <div class="col"><label>IMC Inicial</label><input type="text" id="imc" class="readonly" readonly placeholder="Se calculará solo..."></div>
-    </div>
-    <div class="row">
-        <div class="col"><label>Diagnóstico Presuntivo</label><input type="text" id="diagnostico" placeholder="Ej: Enfermedad cardiovascular"></div>
-        <div class="col">
-            <label>Actividad Física</label>
-            <select id="actividad">
-                <option value="sedentaria">Sedentaria</option>
-                <option value="ligera">Ligera</option>
-                <option value="moderada">Moderada</option>
-                <option value="activa">Activa</option>
-            </select>
-        </div>
+        <div class="col"><label>Peso (kg)</label><input type="number" id="peso" step="0.1" placeholder="Ej: 95"></div>
+        <div class="col"><label>IMC</label><input type="text" id="imc" class="readonly" readonly placeholder="..."></div>
     </div>
 
-    <!-- SECCIÓN 3 -->
-    <h3>3. Anamnesis Alimentaria</h3>
+    <!-- SECCIÓN 3: ENERGÍA (NUEVA) -->
+    <h3>3. Requerimientos Energéticos (Mifflin-St Jeor)</h3>
+    <div class="row">
+        <div class="col">
+            <label>Factor de Actividad (FA)</label>
+            <select id="factorActividad">
+                <option value="1.2">Sedentario (1.2)</option>
+                <option value="1.375">Ligero (1.375)</option>
+                <option value="1.55">Moderado (1.55)</option>
+                <option value="1.725">Activo (1.725)</option>
+                <option value="1.9">Muy Activo (1.9)</option>
+            </select>
+        </div>
+        <div class="col"><label>Gasto Energético Basal (kcal)</label><input type="text" id="geb" class="readonly" readonly placeholder="Calculando..."></div>
+        <div class="col"><label>Valor Calórico Total - VCT (kcal)</label><input type="text" id="vct" class="readonly resaltado" readonly placeholder="Calculando..."></div>
+    </div>
+
+    <!-- SECCIÓN 4 -->
+    <h3>4. Anamnesis Alimentaria</h3>
     <div class="row">
         <div class="col"><label>Patrón de comidas y Hábitos</label><textarea id="habitos" placeholder="Ej: No desayuna ni almuerza..."></textarea></div>
         <div class="col"><label>Alimentos frecuentes / Rechazos</label><textarea id="frecuentes" placeholder="Ej: Frecuente: asado, mates..."></textarea></div>
     </div>
-    <div class="row">
-        <div class="col">
-            <label>Alergias / Intolerancias alimentarias</label>
-            <input type="text" id="alergias" placeholder="Ej: Celiaquía, Intolerancia a la lactosa...">
-            <div class="checkbox-group">
-                <input type="checkbox" id="no-alergias">
-                <label for="no-alergias" style="margin:0; font-weight:normal;">No registra</label>
-            </div>
-        </div>
-    </div>
 
-    <!-- SECCIÓN 4 -->
-    <h3>4. Evolución y Seguimiento</h3>
+    <!-- SECCIÓN 5 -->
+    <h3>5. Evolución y Seguimiento</h3>
     <div class="row" style="background: #e8f4f8; padding: 15px; border-radius: 8px; align-items: center;">
         <div class="col"><label>Fecha</label><input type="date" id="fechaControl"></div>
         <div class="col"><label>Peso (kg)</label><input type="number" id="pesoControl" step="0.1"></div>
         <div class="col"><label>Observaciones</label><input type="text" id="obsControl" placeholder="Ej: Buena adherencia..."></div>
         <div class="col"><button onclick="agregarControl()">+ Cargar Control</button></div>
     </div>
-
+    
     <div class="grafico-container">
         <canvas id="graficoEvolucion" height="100"></canvas>
     </div>
-
+    
     <table>
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Peso (kg)</th>
-                <th>Diferencia</th>
-                <th>Observaciones</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
+        <thead><tr><th>Fecha</th><th>Peso (kg)</th><th>Diferencia</th><th>Observaciones</th><th>Acción</th></tr></thead>
         <tbody id="tablaHistorial"></tbody>
     </table>
 </div>
@@ -127,22 +115,55 @@
     let controles = [];
     let miGrafico;
 
-    // --- LÓGICA DEL IMC ---
+    // --- LÓGICA DEL IMC Y GASTO ENERGÉTICO ---
     const inputTalla = document.getElementById('talla');
     const inputPeso = document.getElementById('peso');
     const inputIMC = document.getElementById('imc');
+    const selectSexo = document.getElementById('sexo');
+    const inputEdad = document.getElementById('edad');
+    const selectFA = document.getElementById('factorActividad');
+    const inputGEB = document.getElementById('geb');
+    const inputVCT = document.getElementById('vct');
 
-    function calcularIMC() {
-        const talla = parseFloat(inputTalla.value);
+    function calcularTodo() {
+        const tallaM = parseFloat(inputTalla.value);
         const peso = parseFloat(inputPeso.value);
-        if (talla > 0 && peso > 0) {
-            inputIMC.value = (peso / (talla * talla)).toFixed(2);
+        const edad = parseInt(inputEdad.value);
+        const sexo = selectSexo.value;
+        const fa = parseFloat(selectFA.value);
+
+        // 1. Calcular IMC
+        if (tallaM > 0 && peso > 0) {
+            inputIMC.value = (peso / (tallaM * tallaM)).toFixed(2);
         } else {
             inputIMC.value = '';
         }
+
+        // 2. Calcular Mifflin-St Jeor
+        if (tallaM > 0 && peso > 0 && edad > 0 && sexo !== "") {
+            const tallaCm = tallaM * 100; // La fórmula usa centímetros
+            let geb = 0;
+
+            if (sexo === 'masculino') {
+                geb = (10 * peso) + (6.25 * tallaCm) - (5 * edad) + 5;
+            } else if (sexo === 'femenino') {
+                geb = (10 * peso) + (6.25 * tallaCm) - (5 * edad) - 161;
+            }
+
+            inputGEB.value = Math.round(geb) + ' kcal';
+            inputVCT.value = Math.round(geb * fa) + ' kcal';
+        } else {
+            inputGEB.value = '';
+            inputVCT.value = '';
+        }
     }
-    inputTalla.addEventListener('input', calcularIMC);
-    inputPeso.addEventListener('input', calcularIMC);
+
+    // Le decimos a todos los campos que "escuchen" cambios para recalcular al instante
+    inputTalla.addEventListener('input', calcularTodo);
+    inputPeso.addEventListener('input', calcularTodo);
+    inputEdad.addEventListener('input', calcularTodo);
+    selectSexo.addEventListener('change', calcularTodo);
+    selectFA.addEventListener('change', calcularTodo);
 
     // --- INICIALIZAR GRÁFICO ---
     function inicializarGrafico() {
@@ -158,13 +179,10 @@
     function renderizarEvolucion() {
         const tabla = document.getElementById('tablaHistorial');
         tabla.innerHTML = '';
-        let fechas = [];
-        let pesos = [];
+        let fechas = [], pesos = [];
 
         controles.forEach((control, index) => {
-            fechas.push(control.fecha);
-            pesos.push(control.peso);
-
+            fechas.push(control.fecha); pesos.push(control.peso);
             let colorDif = control.diferencia > 0 ? 'color: red;' : (control.diferencia < 0 ? 'color: green;' : '');
             let signo = control.diferencia > 0 ? '+' : '';
 
@@ -175,44 +193,30 @@
                     <td style="${colorDif} font-weight:bold;">${signo}${control.diferencia} kg</td>
                     <td>${control.observaciones}</td>
                     <td><button style="background:#e74c3c; padding: 5px 10px; margin:0;" onclick="borrarControl(${index})">X</button></td>
-                </tr>
-            `;
+                </tr>`;
         });
-
-        miGrafico.data.labels = fechas;
-        miGrafico.data.datasets[0].data = pesos;
-        miGrafico.update();
+        miGrafico.data.labels = fechas; miGrafico.data.datasets[0].data = pesos; miGrafico.update();
     }
 
-    // --- AGREGAR CONTROL ---
     function agregarControl() {
         const fecha = document.getElementById('fechaControl').value;
         const pesoActual = parseFloat(document.getElementById('pesoControl').value);
         const obs = document.getElementById('obsControl').value;
-
         if (!fecha || isNaN(pesoActual)) return alert('Ingresá fecha y peso.');
 
         let pesoAnterior = controles.length > 0 ? controles[controles.length - 1].peso : parseFloat(inputPeso.value || pesoActual);
         let diferencia = (pesoActual - pesoAnterior).toFixed(1);
 
         controles.push({ fecha: fecha, peso: pesoActual, diferencia: diferencia, observaciones: obs });
-        
-        document.getElementById('fechaControl').value = '';
-        document.getElementById('pesoControl').value = '';
-        document.getElementById('obsControl').value = '';
-        
-        renderizarEvolucion();
-        guardarFichaCompleta(); // Guarda automáticamente al agregar un control
+        document.getElementById('fechaControl').value = ''; document.getElementById('pesoControl').value = ''; document.getElementById('obsControl').value = '';
+        renderizarEvolucion(); guardarFichaCompleta();
     }
 
-    // --- BORRAR CONTROL ---
     function borrarControl(index) {
-        controles.splice(index, 1);
-        renderizarEvolucion();
-        guardarFichaCompleta();
+        controles.splice(index, 1); renderizarEvolucion(); guardarFichaCompleta();
     }
 
-    // --- LOCAL STORAGE: GUARDAR ---
+    // --- LOCAL STORAGE ---
     function guardarFichaCompleta() {
         const paciente = {
             nombre: document.getElementById('nombre').value,
@@ -221,28 +225,21 @@
             ocupacion: document.getElementById('ocupacion').value,
             talla: document.getElementById('talla').value,
             peso: document.getElementById('peso').value,
-            diagnostico: document.getElementById('diagnostico').value,
-            actividad: document.getElementById('actividad').value,
+            factorActividad: document.getElementById('factorActividad').value,
             habitos: document.getElementById('habitos').value,
             frecuentes: document.getElementById('frecuentes').value,
-            alergias: document.getElementById('alergias').value,
-            noAlergias: document.getElementById('no-alergias').checked,
             controles: controles
         };
-        localStorage.setItem('fichaPaciente1', JSON.stringify(paciente));
+        localStorage.setItem('fichaPaciente2', JSON.stringify(paciente));
         
-        // Efecto visual en el botón para saber que guardó
         const btn = document.querySelector('.btn-guardar');
-        btn.innerText = "✔️ ¡Guardado!";
-        btn.style.backgroundColor = "#27ae60";
+        btn.innerText = "✔️ ¡Guardado!"; btn.style.backgroundColor = "#27ae60";
         setTimeout(() => { btn.innerText = "💾 Guardar Ficha"; btn.style.backgroundColor = "#f39c12"; }, 2000);
     }
 
-    // --- LOCAL STORAGE: CARGAR ---
     function cargarFicha() {
         inicializarGrafico();
-        const dataGuardada = localStorage.getItem('fichaPaciente1');
-        
+        const dataGuardada = localStorage.getItem('fichaPaciente2');
         if (dataGuardada) {
             const paciente = JSON.parse(dataGuardada);
             document.getElementById('nombre').value = paciente.nombre || '';
@@ -251,20 +248,16 @@
             document.getElementById('ocupacion').value = paciente.ocupacion || '';
             document.getElementById('talla').value = paciente.talla || '';
             document.getElementById('peso').value = paciente.peso || '';
-            document.getElementById('diagnostico').value = paciente.diagnostico || '';
-            document.getElementById('actividad').value = paciente.actividad || '';
+            document.getElementById('factorActividad').value = paciente.factorActividad || '1.2';
             document.getElementById('habitos').value = paciente.habitos || '';
             document.getElementById('frecuentes').value = paciente.frecuentes || '';
-            document.getElementById('alergias').value = paciente.alergias || '';
-            document.getElementById('no-alergias').checked = paciente.noAlergias || false;
-            
             controles = paciente.controles || [];
-            calcularIMC();
+            
+            calcularTodo();
             renderizarEvolucion();
         }
     }
 
-    // Al cargar la página, ejecutar la carga de datos
     window.onload = cargarFicha;
 </script>
 
