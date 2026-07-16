@@ -45,9 +45,9 @@
     <!-- SECCIÓN 2: Antropometría y Clínica -->
     <h3>2. Antropometría y Clínica</h3>
     <div class="row">
-        <div class="col"><label>Talla (m)</label><input type="number" step="0.01" placeholder="Ej: 1.85"></div>
-        <div class="col"><label>Peso (kg)</label><input type="number" step="0.1" placeholder="Ej: 95"></div>
-        <div class="col"><label>IMC</label><input type="text" class="readonly" readonly placeholder="Se calculará solo..."></div>
+        <div class="col"><label>Talla (m)</label><input type="number" id="talla" step="0.01" placeholder="Ej: 1.85"></div>
+        <div class="col"><label>Peso (kg)</label><input type="number" id="peso" step="0.1" placeholder="Ej: 95"></div>
+        <div class="col"><label>IMC</label><input type="text" id="imc" class="readonly" readonly placeholder="Se calculará solo..."></div>
     </div>
     <div class="row">
         <div class="col"><label>Diagnóstico Presuntivo</label><input type="text" placeholder="Ej: Enfermedad cardiovascular"></div>
@@ -91,6 +91,32 @@
         </div>
     </div>
 </div>
+
+<!-- EL "CEREBRO" DE LA APP (Lógica en JavaScript) -->
+<script>
+    // 1. Agarramos las casillas de talla, peso e IMC
+    const inputTalla = document.getElementById('talla');
+    const inputPeso = document.getElementById('peso');
+    const inputIMC = document.getElementById('imc');
+
+    // 2. Creamos la función que hace la matemática
+    function calcularIMC() {
+        const talla = parseFloat(inputTalla.value);
+        const peso = parseFloat(inputPeso.value);
+
+        // Verificamos que ambos números sean mayores a 0 para no dar error
+        if (talla > 0 && peso > 0) {
+            const imc = peso / (talla * talla);
+            inputIMC.value = imc.toFixed(2); // Redondea a 2 decimales
+        } else {
+            inputIMC.value = ''; // Deja la casilla en blanco si falta un dato
+        }
+    }
+
+    // 3. Le decimos a las casillas que presten atención cada vez que tipeás algo
+    inputTalla.addEventListener('input', calcularIMC);
+    inputPeso.addEventListener('input', calcularIMC);
+</script>
 
 </body>
 </html>
