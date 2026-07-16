@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro Clínico Dietoterápico</title>
-    <!-- Traemos Chart.js para hacer gráficos espectaculares -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        h1 { color: #2c3e50; margin: 0; }
         h3 { color: #2980b9; border-bottom: 2px solid #ecf0f1; padding-bottom: 5px; margin-top: 30px; }
         .row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
         .col { flex: 1; min-width: 200px; }
@@ -20,41 +20,45 @@
         .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         input[type="checkbox"] { width: auto; transform: scale(1.2); }
         
-        /* Estilos para el botón y la tabla */
         button { background-color: #27ae60; color: white; border: none; padding: 10px 20px; font-size: 1em; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 24px; transition: 0.3s; }
         button:hover { background-color: #2ecc71; }
+        .btn-guardar { background-color: #f39c12; width: auto; margin: 0; padding: 12px 25px; font-size: 1.1em; }
+        .btn-guardar:hover { background-color: #e67e22; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #2980b9; color: white; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        
         .grafico-container { margin-top: 30px; padding: 20px; background: #fafafa; border-radius: 10px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Ficha del Paciente</h1>
+    <div class="header">
+        <h1>Ficha del Paciente</h1>
+        <button class="btn-guardar" onclick="guardarFichaCompleta()">💾 Guardar Ficha</button>
+    </div>
 
-    <!-- SECCIÓN 1: Datos Generales -->
+    <!-- SECCIÓN 1 -->
     <h3>1. Datos Generales</h3>
     <div class="row">
-        <div class="col"><label>Paciente (Nombre y Apellido)</label><input type="text" placeholder="Ej: Juan M."></div>
+        <div class="col"><label>Paciente</label><input type="text" id="nombre" placeholder="Ej: Juan M."></div>
         <div class="col">
             <label>Sexo</label>
-            <select>
+            <select id="sexo">
                 <option value="">Seleccionar...</option>
                 <option value="masculino">Masculino</option>
                 <option value="femenino">Femenino</option>
             </select>
         </div>
-        <div class="col"><label>Edad (años)</label><input type="number" placeholder="Ej: 58"></div>
+        <div class="col"><label>Edad</label><input type="number" id="edad" placeholder="Ej: 58"></div>
     </div>
     <div class="row">
-        <div class="col"><label>Ocupación</label><input type="text" placeholder="Ej: Informático"></div>
+        <div class="col"><label>Ocupación</label><input type="text" id="ocupacion" placeholder="Ej: Informático"></div>
     </div>
 
-    <!-- SECCIÓN 2: Antropometría y Clínica -->
+    <!-- SECCIÓN 2 -->
     <h3>2. Antropometría de Inicio</h3>
     <div class="row">
         <div class="col"><label>Talla (m)</label><input type="number" id="talla" step="0.01" placeholder="Ej: 1.85"></div>
@@ -62,10 +66,10 @@
         <div class="col"><label>IMC Inicial</label><input type="text" id="imc" class="readonly" readonly placeholder="Se calculará solo..."></div>
     </div>
     <div class="row">
-        <div class="col"><label>Diagnóstico Presuntivo</label><input type="text" placeholder="Ej: Enfermedad cardiovascular"></div>
+        <div class="col"><label>Diagnóstico Presuntivo</label><input type="text" id="diagnostico" placeholder="Ej: Enfermedad cardiovascular"></div>
         <div class="col">
             <label>Actividad Física</label>
-            <select>
+            <select id="actividad">
                 <option value="sedentaria">Sedentaria</option>
                 <option value="ligera">Ligera</option>
                 <option value="moderada">Moderada</option>
@@ -74,30 +78,36 @@
         </div>
     </div>
 
-    <!-- SECCIÓN 3: Anamnesis y Hábitos -->
+    <!-- SECCIÓN 3 -->
     <h3>3. Anamnesis Alimentaria</h3>
     <div class="row">
-        <div class="col"><label>Patrón de comidas y Hábitos</label><textarea placeholder="Ej: No desayuna ni almuerza, cena abundante..."></textarea></div>
-        <div class="col"><label>Alimentos frecuentes / Rechazos</label><textarea placeholder="Ej: Frecuente: asado, mates. Rechaza: verduras..."></textarea></div>
+        <div class="col"><label>Patrón de comidas y Hábitos</label><textarea id="habitos" placeholder="Ej: No desayuna ni almuerza..."></textarea></div>
+        <div class="col"><label>Alimentos frecuentes / Rechazos</label><textarea id="frecuentes" placeholder="Ej: Frecuente: asado, mates..."></textarea></div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>Alergias / Intolerancias alimentarias</label>
+            <input type="text" id="alergias" placeholder="Ej: Celiaquía, Intolerancia a la lactosa...">
+            <div class="checkbox-group">
+                <input type="checkbox" id="no-alergias">
+                <label for="no-alergias" style="margin:0; font-weight:normal;">No registra</label>
+            </div>
+        </div>
     </div>
 
-    <!-- SECCIÓN 4: Historial y Evolución -->
+    <!-- SECCIÓN 4 -->
     <h3>4. Evolución y Seguimiento</h3>
-    
-    <!-- Formulario para agregar un nuevo control -->
     <div class="row" style="background: #e8f4f8; padding: 15px; border-radius: 8px; align-items: center;">
-        <div class="col"><label>Fecha del Control</label><input type="date" id="fechaControl"></div>
-        <div class="col"><label>Peso Actual (kg)</label><input type="number" id="pesoControl" step="0.1" placeholder="Ej: 93.5"></div>
+        <div class="col"><label>Fecha</label><input type="date" id="fechaControl"></div>
+        <div class="col"><label>Peso (kg)</label><input type="number" id="pesoControl" step="0.1"></div>
         <div class="col"><label>Observaciones</label><input type="text" id="obsControl" placeholder="Ej: Buena adherencia..."></div>
         <div class="col"><button onclick="agregarControl()">+ Cargar Control</button></div>
     </div>
 
-    <!-- Gráfico de Evolución -->
     <div class="grafico-container">
         <canvas id="graficoEvolucion" height="100"></canvas>
     </div>
 
-    <!-- Tabla de Historial -->
     <table>
         <thead>
             <tr>
@@ -105,17 +115,19 @@
                 <th>Peso (kg)</th>
                 <th>Diferencia</th>
                 <th>Observaciones</th>
+                <th>Acción</th>
             </tr>
         </thead>
-        <tbody id="tablaHistorial">
-            <!-- Las filas se van a agregar acá automáticamente -->
-        </tbody>
+        <tbody id="tablaHistorial"></tbody>
     </table>
 </div>
 
-<!-- EL CEREBRO DE LA APP -->
 <script>
-    // --- LÓGICA DEL IMC INICIAL ---
+    // Variables globales
+    let controles = [];
+    let miGrafico;
+
+    // --- LÓGICA DEL IMC ---
     const inputTalla = document.getElementById('talla');
     const inputPeso = document.getElementById('peso');
     const inputIMC = document.getElementById('imc');
@@ -132,87 +144,128 @@
     inputTalla.addEventListener('input', calcularIMC);
     inputPeso.addEventListener('input', calcularIMC);
 
+    // --- INICIALIZAR GRÁFICO ---
+    function inicializarGrafico() {
+        const ctx = document.getElementById('graficoEvolucion').getContext('2d');
+        miGrafico = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Evolución del Peso (kg)', data: [], borderColor: '#2980b9', backgroundColor: 'rgba(41, 128, 185, 0.2)', borderWidth: 3, pointBackgroundColor: '#27ae60', pointRadius: 5, fill: true, tension: 0.3 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: false } } }
+        });
+    }
 
-    // --- LÓGICA DEL GRÁFICO Y EL HISTORIAL ---
-    // Variables para guardar los datos temporalmente
-    let fechas = [];
-    let pesos = [];
-    let pesoAnterior = 0;
+    // --- ACTUALIZAR TABLA Y GRÁFICO ---
+    function renderizarEvolucion() {
+        const tabla = document.getElementById('tablaHistorial');
+        tabla.innerHTML = '';
+        let fechas = [];
+        let pesos = [];
 
-    // Inicializamos el gráfico de Chart.js
-    const ctx = document.getElementById('graficoEvolucion').getContext('2d');
-    const miGrafico = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: fechas, // El eje X (fechas)
-            datasets: [{
-                label: 'Evolución del Peso (kg)',
-                data: pesos, // El eje Y (pesos)
-                borderColor: '#2980b9',
-                backgroundColor: 'rgba(41, 128, 185, 0.2)',
-                borderWidth: 3,
-                pointBackgroundColor: '#27ae60',
-                pointRadius: 5,
-                fill: true,
-                tension: 0.3 // Hace que la curva sea suave
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: false } // Para que el gráfico no empiece en 0kg y se note la diferencia
-            }
-        }
-    });
+        controles.forEach((control, index) => {
+            fechas.push(control.fecha);
+            pesos.push(control.peso);
 
-    // Función para agregar un nuevo control
+            let colorDif = control.diferencia > 0 ? 'color: red;' : (control.diferencia < 0 ? 'color: green;' : '');
+            let signo = control.diferencia > 0 ? '+' : '';
+
+            tabla.innerHTML += `
+                <tr>
+                    <td>${control.fecha}</td>
+                    <td><b>${control.peso}</b></td>
+                    <td style="${colorDif} font-weight:bold;">${signo}${control.diferencia} kg</td>
+                    <td>${control.observaciones}</td>
+                    <td><button style="background:#e74c3c; padding: 5px 10px; margin:0;" onclick="borrarControl(${index})">X</button></td>
+                </tr>
+            `;
+        });
+
+        miGrafico.data.labels = fechas;
+        miGrafico.data.datasets[0].data = pesos;
+        miGrafico.update();
+    }
+
+    // --- AGREGAR CONTROL ---
     function agregarControl() {
         const fecha = document.getElementById('fechaControl').value;
         const pesoActual = parseFloat(document.getElementById('pesoControl').value);
-        const observaciones = document.getElementById('obsControl').value;
+        const obs = document.getElementById('obsControl').value;
 
-        // Validamos que haya ingresado fecha y peso
-        if (!fecha || isNaN(pesoActual)) {
-            alert('Por favor, ingresá la fecha y el peso del control.');
-            return;
-        }
+        if (!fecha || isNaN(pesoActual)) return alert('Ingresá fecha y peso.');
 
-        // Calculamos la diferencia con el peso anterior (si es el primero, diferencia es 0)
-        let diferencia = 0;
-        if (pesos.length > 0) {
-            pesoAnterior = pesos[pesos.length - 1];
-            diferencia = (pesoActual - pesoAnterior).toFixed(1);
-        } else if (inputPeso.value) { // Si es el primer control, comparamos con el peso inicial
-            pesoAnterior = parseFloat(inputPeso.value);
-            diferencia = (pesoActual - pesoAnterior).toFixed(1);
-        }
+        let pesoAnterior = controles.length > 0 ? controles[controles.length - 1].peso : parseFloat(inputPeso.value || pesoActual);
+        let diferencia = (pesoActual - pesoAnterior).toFixed(1);
 
-        // Coloreamos la diferencia (verde si bajó, rojo si subió)
-        let colorDiferencia = diferencia > 0 ? 'color: red;' : 'color: green;';
-        let signoDiferencia = diferencia > 0 ? '+' : '';
-
-        // 1. Agregamos la fila a la tabla HTML
-        const tabla = document.getElementById('tablaHistorial');
-        const nuevaFila = `
-            <tr>
-                <td>${fecha}</td>
-                <td><b>${pesoActual}</b></td>
-                <td style="${colorDiferencia} font-weight:bold;">${signoDiferencia}${diferencia} kg</td>
-                <td>${observaciones}</td>
-            </tr>
-        `;
-        tabla.innerHTML += nuevaFila;
-
-        // 2. Actualizamos los datos del gráfico
-        fechas.push(fecha);
-        pesos.push(pesoActual);
-        miGrafico.update(); // Le avisamos a Chart.js que dibuje los nuevos datos
-
-        // Limpiamos los casilleros del "Nuevo control" para el próximo
+        controles.push({ fecha: fecha, peso: pesoActual, diferencia: diferencia, observaciones: obs });
+        
         document.getElementById('fechaControl').value = '';
         document.getElementById('pesoControl').value = '';
         document.getElementById('obsControl').value = '';
+        
+        renderizarEvolucion();
+        guardarFichaCompleta(); // Guarda automáticamente al agregar un control
     }
+
+    // --- BORRAR CONTROL ---
+    function borrarControl(index) {
+        controles.splice(index, 1);
+        renderizarEvolucion();
+        guardarFichaCompleta();
+    }
+
+    // --- LOCAL STORAGE: GUARDAR ---
+    function guardarFichaCompleta() {
+        const paciente = {
+            nombre: document.getElementById('nombre').value,
+            sexo: document.getElementById('sexo').value,
+            edad: document.getElementById('edad').value,
+            ocupacion: document.getElementById('ocupacion').value,
+            talla: document.getElementById('talla').value,
+            peso: document.getElementById('peso').value,
+            diagnostico: document.getElementById('diagnostico').value,
+            actividad: document.getElementById('actividad').value,
+            habitos: document.getElementById('habitos').value,
+            frecuentes: document.getElementById('frecuentes').value,
+            alergias: document.getElementById('alergias').value,
+            noAlergias: document.getElementById('no-alergias').checked,
+            controles: controles
+        };
+        localStorage.setItem('fichaPaciente1', JSON.stringify(paciente));
+        
+        // Efecto visual en el botón para saber que guardó
+        const btn = document.querySelector('.btn-guardar');
+        btn.innerText = "✔️ ¡Guardado!";
+        btn.style.backgroundColor = "#27ae60";
+        setTimeout(() => { btn.innerText = "💾 Guardar Ficha"; btn.style.backgroundColor = "#f39c12"; }, 2000);
+    }
+
+    // --- LOCAL STORAGE: CARGAR ---
+    function cargarFicha() {
+        inicializarGrafico();
+        const dataGuardada = localStorage.getItem('fichaPaciente1');
+        
+        if (dataGuardada) {
+            const paciente = JSON.parse(dataGuardada);
+            document.getElementById('nombre').value = paciente.nombre || '';
+            document.getElementById('sexo').value = paciente.sexo || '';
+            document.getElementById('edad').value = paciente.edad || '';
+            document.getElementById('ocupacion').value = paciente.ocupacion || '';
+            document.getElementById('talla').value = paciente.talla || '';
+            document.getElementById('peso').value = paciente.peso || '';
+            document.getElementById('diagnostico').value = paciente.diagnostico || '';
+            document.getElementById('actividad').value = paciente.actividad || '';
+            document.getElementById('habitos').value = paciente.habitos || '';
+            document.getElementById('frecuentes').value = paciente.frecuentes || '';
+            document.getElementById('alergias').value = paciente.alergias || '';
+            document.getElementById('no-alergias').checked = paciente.noAlergias || false;
+            
+            controles = paciente.controles || [];
+            calcularIMC();
+            renderizarEvolucion();
+        }
+    }
+
+    // Al cargar la página, ejecutar la carga de datos
+    window.onload = cargarFicha;
 </script>
 
 </body>
